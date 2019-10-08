@@ -1,31 +1,50 @@
 import { Subject } from "rxjs";
-const SerialPort = require("serialport");
-const Readline = require("@serialport/parser-readline");
+import { serialPortList } from "./interface";
+import { log } from "console";
+import { selectCorrectComPort } from "./util";
+import { verifyComPort } from "./select";
 
 export const ReadParser = new Subject();
 export const WriteParser = new Subject();
 
-const port = new SerialPort("/dev/ttyACM0", {
-  autoOpen: true,
-  baudRate: 9600
-});
+const SerialPort = require("serialport");
+const Readline = require("@serialport/parser-readline");
+const ArduinoOperation = async () => {
+  const ports: serialPortList[] = await SerialPort.list();
 
-const parser = port.pipe(new Readline({ delimiter: "\r\n" }));
+  let comPort = selectCorrectComPort(ports);
 
-port.on("open", function() {
-  console.log("port opened");
-});
+  const port = new SerialPort(comPort, {
+    autoOpen: true,
+    baudRate: 9600
+  });
 
-port.on("error", function() {
-  console.log("port error");
-});
+  comPort = await verifyComPort(comPort);
 
-parser.on("readable", (e: any) => {
-  const read = parser.read();
-  console.log("data", read);
-  ReadParser.next(read);
-});
+  const parser = port.pipe(new Readline({ delimiter: "\r\n" }));
 
-WriteParser.subscribe(data => {
-  parser.write(data);
-});
+  port.on("open", function() {
+    console.log("port opened");
+  });
+
+  port.on("error", function(e: any) {
+    console.log("port error", e);
+  });
+
+  parser.on("readable", (e: any) => {
+    const read = parser.read();
+    console.log("data", read);
+    ReadParser.next(read);
+  });
+
+  WriteParser.subscribe(data => {
+    writeAndDrain(data);
+  });
+
+  function writeAndDrain(data: any, callback = () => {}) {
+    parser.write(data);
+    parser.drain(callback);
+  }
+};
+
+ArduinoOperation();
