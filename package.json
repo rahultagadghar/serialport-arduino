@@ -4,7 +4,7 @@
   "description": "Starter express applicaion in typescript it includes command line user interaction from user, socket server & socket client, db and serialport configuration",
   "main": "index.js",
   "scripts": {
-    "start": "tsc && dist/server.js",
+    "start": "tsc && node dist/server.js",
     "dev": "nodemon src/server.ts"
   },
   "author": "Rahul Tagadghar",
