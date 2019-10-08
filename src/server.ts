@@ -1,19 +1,29 @@
-import { socketInstance } from "./socket";
-import express from "express";
-const app = express();
+import { config } from "dotenv";
+config();
 
-const http = require("http").createServer(app);
+import express from "express";
+import { DbConnection } from "./db/dbConnect";
+import { createServer } from "http";
+import { log } from "console";
+
+const app = express();
+const port = process.env.PORT;
+
+const http = createServer(app);
+
+http.listen(port, () => log(`Server is up on port : ${port}`));
 
 const io = require("socket.io")(http);
 
-import { UserRoutes } from "./routes";
+(async () => {
+  await DbConnection();
 
-app.use("/", UserRoutes);
+  const { socketInstance } = require("./socket");
+  const { UserRoutes } = require("./routes");
 
-io.on("connection", function(socket: any) {
-  socketInstance(socket);
-});
+  app.use("/", UserRoutes);
 
-http.listen(3000, () => {
-  console.log("listening on *:3000");
-});
+  io.on("connection", function(socket: any) {
+    socketInstance(socket);
+  });
+})();

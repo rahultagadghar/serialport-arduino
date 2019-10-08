@@ -24,16 +24,16 @@ const ArduinoOperation = async () => {
   const parser = port.pipe(new Readline({ delimiter: "\r\n" }));
 
   port.on("open", function() {
-    console.log("port opened");
+    log("port opened");
   });
 
   port.on("error", function(e: any) {
-    console.log("port error", e);
+    log("port error", e);
   });
 
   parser.on("readable", (e: any) => {
     const read = parser.read();
-    console.log("data", read);
+    log("data", read);
     ReadParser.next(read);
   });
 
@@ -43,7 +43,7 @@ const ArduinoOperation = async () => {
 
   function writeAndDrain(data: any, callback = () => {}) {
     parser.write(data);
-    parser.drain(callback);
+    // parser.drain(callback);
   }
 };
 
